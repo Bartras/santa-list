@@ -15,3 +15,8 @@ Site statique (GitHub Pages) + Firebase Firestore pour le partage temps réel de
 - Lecture publique ; création/édition/suppression réservées à ton compte (règles Firestore).
 - Les visiteurs ne peuvent modifier que `takenBy`/`takenAt` (réserver un cadeau libre, ou libérer).
 - Photo « depuis l'appareil » : redimensionnée en JPEG ≤700 px et stockée dans le document (pas de Firebase Storage, qui est payant désormais).
+
+## Comptes « éditeurs » (Murielle, Philippe…)
+1. *Authentication > Utilisateurs > Ajouter un utilisateur* : email + mot de passe provisoire.
+2. *Firestore > Données > Démarrer une collection* `editors` → ID du document = **son email en minuscules** → champ `list` (string) = `murielle` (ou `philippe`, `sara`, `sohan`, `thibaut`).
+3. Republier `firestore.rules`. L'éditeur se connecte via « Connexion » en bas de page et ne gère que sa liste.

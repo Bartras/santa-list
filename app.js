@@ -1,8 +1,8 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, collection, doc, addDoc, updateDoc, deleteDoc, onSnapshot, query, orderBy,
+import { getFirestore, collection, doc, getDoc, addDoc, updateDoc, deleteDoc, onSnapshot, query, orderBy,
          runTransaction, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { firebaseConfig } from "./firebase-config.js?v=3";
+import { firebaseConfig } from "./firebase-config.js?v=4";
 
 const $ = id => document.getElementById(id);
 const app = initializeApp(firebaseConfig);
@@ -10,14 +10,15 @@ const db = getFirestore(app);
 const auth = getAuth(app);
 const gifts = collection(db, "gifts");
 
-const PEOPLE = { thibaut: "Thibaut", sara: "Sara", sohan: "Sohan" };
+const PEOPLE = { thibaut: "Thibaut", sara: "Sara", sohan: "Sohan", murielle: "Murielle", philippe: "Philippe" };
 let current = PEOPLE[location.hash.slice(1)] ? location.hash.slice(1) : "thibaut";
-let isAdmin = false, items = [], editingId = null, pendingImageData = null;
+let loggedIn = false, myList = null /* null = admin (toutes les listes) */, items = [], editingId = null, pendingImageData = null;
 
 const safeUrl = u => { try { const x = new URL(u); return /^https?:$/.test(x.protocol) ? x.href : ""; } catch { return ""; } };
 const el = (tag, props = {}, ...kids) => { const e = Object.assign(document.createElement(tag), props); kids.forEach(k => e.append(k)); return e; };
 
 // ---------- Rendu ----------
+const canEdit = g => loggedIn && (myList === null || ownerOf(g) === myList);
 const ownerOf = g => PEOPLE[g.owner] ? g.owner : "thibaut"; // anciens cadeaux sans champ owner
 function renderTabs() {
   $("tabs").replaceChildren(...Object.entries(PEOPLE).map(([k, n]) => {
@@ -44,7 +45,7 @@ function render() {
     } else {
       actions.append(btn("🎁 Je l'offre", () => openTake(g), "primary"));
     }
-    if (isAdmin) {
+    if (canEdit(g)) {
       actions.append(btn("Modifier", () => openGift(g), "small"), btn("Supprimer", () => remove(g), "small"));
     }
     const link = safeUrl(g.url);
@@ -91,22 +92,36 @@ async function release(g) {
 }
 
 // ---------- Admin : connexion ----------
-$("adminLink").onclick = e => { e.preventDefault(); isAdmin ? null : $("loginDlg").showModal(); };
+$("adminLink").onclick = e => { e.preventDefault(); loggedIn ? null : $("loginDlg").showModal(); };
 $("loginForm").onsubmit = async () => {
   $("loginErr").textContent = "";
   try { await signInWithEmailAndPassword(auth, $("loginEmail").value, $("loginPwd").value); $("loginPwd").value = ""; }
   catch { $("loginErr").textContent = "Identifiants invalides"; $("loginDlg").showModal(); }
 };
 $("logoutBtn").onclick = () => signOut(auth);
-onAuthStateChanged(auth, u => { isAdmin = !!u; $("adminBar").hidden = !isAdmin; render(); });
+// Rôle : un document editors/{email} { list: "murielle" } limite le compte à sa propre liste.
+// Sans document, le compte est traité comme admin dans l'interface (les règles Firestore font foi).
+onAuthStateChanged(auth, async u => {
+  loggedIn = !!u; myList = null;
+  if (u) {
+    try {
+      const s = await getDoc(doc(db, "editors", u.email));
+      if (s.exists() && PEOPLE[s.data().list]) myList = s.data().list;
+    } catch { /* pas de document : admin */ }
+  }
+  $("adminBar").hidden = !loggedIn;
+  const allowed = Object.entries(PEOPLE).filter(([k]) => myList === null || k === myList);
+  $("gOwner").replaceChildren(...allowed.map(([k, n]) => el("option", { value: k, textContent: n })));
+  if (myList) current = myList;
+  render();
+});
 
 // ---------- Admin : ajout / édition ----------
-$("gOwner").replaceChildren(...Object.entries(PEOPLE).map(([k, n]) => el("option", { value: k, textContent: n })));
 $("addBtn").onclick = () => openGift(null);
 function openGift(g) {
   editingId = g?.id || null; pendingImageData = null;
   $("giftDlgTitle").textContent = g ? "Modifier le cadeau" : "Ajouter un cadeau";
-  $("gOwner").value = g ? ownerOf(g) : current;
+  $("gOwner").value = g ? ownerOf(g) : (myList || current);
   $("gUrl").value = g?.url || ""; $("gTitle").value = g?.title || ""; $("gPrice").value = g?.price || "";
   $("gNote").value = g?.note || ""; $("gImage").value = g && !g.imageIsData ? (g.image || "") : "";
   $("gFile").value = ""; $("fetchMsg").textContent = "";

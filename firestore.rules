@@ -1,19 +1,33 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Remplace par l'email du compte admin créé dans Firebase Authentication
+    // Admin : remplace par l'email du compte principal (Firebase Authentication)
     function isAdmin() {
+      return request.auth != null && request.auth.token.email == 'TON_EMAIL@exemple.fr';
+    }
+    // Liste gérée par un compte « éditeur » : document editors/{email} avec { list: "murielle" }
+    // (créé à la main dans la console Firestore, jamais modifiable depuis le site)
+    function editorList() {
       return request.auth != null
-        && request.auth.token.email == 'TON_EMAIL@exemple.fr'
-        && request.auth.token.email_verified == true;
+        && exists(/databases/$(database)/documents/editors/$(request.auth.token.email))
+        ? get(/databases/$(database)/documents/editors/$(request.auth.token.email)).data.list
+        : '';
+    }
+    function isEditorOf(list) { return editorList() == list && list != ''; }
+
+    match /editors/{email} {
+      allow read: if request.auth != null && (request.auth.token.email == email || isAdmin());
+      allow write: if false;
     }
 
     match /gifts/{id} {
       allow read: if true;
-      allow create, delete: if isAdmin();
+      allow create: if isAdmin() || isEditorOf(request.resource.data.owner);
+      allow delete: if isAdmin() || isEditorOf(resource.data.owner);
       allow update: if isAdmin()
-        // Un visiteur ne peut modifier QUE takenBy / takenAt,
-        // et seulement pour réserver un cadeau libre ou libérer un cadeau pris.
+        // un éditeur modifie uniquement les cadeaux de sa liste, sans changer de liste
+        || (isEditorOf(resource.data.owner) && request.resource.data.owner == resource.data.owner)
+        // un visiteur ne peut modifier QUE takenBy / takenAt (réserver un cadeau libre ou libérer un cadeau pris)
         || (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['takenBy', 'takenAt'])
             && (resource.data.takenBy == null || request.resource.data.takenBy == null)
             && (request.resource.data.takenBy == null
