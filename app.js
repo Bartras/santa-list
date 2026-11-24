@@ -2,7 +2,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/fireba
 import { getFirestore, collection, doc, getDoc, addDoc, updateDoc, deleteDoc, onSnapshot, query, orderBy,
          runTransaction, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { firebaseConfig } from "./firebase-config.js?v=5";
+import { firebaseConfig } from "./firebase-config.js?v=6";
 
 const $ = id => document.getElementById(id);
 const app = initializeApp(firebaseConfig);
@@ -30,6 +30,8 @@ function renderTabs() {
 }
 function render() {
   renderTabs();
+  // « Ajouter » seulement sur un onglet que le compte a le droit de gérer
+  $("addBtn").hidden = !(loggedIn && (myLists === null || myLists.includes(current)));
   const grid = $("grid"); grid.replaceChildren();
   const shown = items.filter(g => ownerOf(g) === current);
   $("status").textContent = shown.length ? "" : "Aucun cadeau pour l'instant.";
