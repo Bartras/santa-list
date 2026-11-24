@@ -2,7 +2,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/fireba
 import { getFirestore, collection, doc, getDoc, addDoc, updateDoc, deleteDoc, onSnapshot, query, orderBy,
          runTransaction, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { firebaseConfig } from "./firebase-config.js?v=6";
+import { firebaseConfig } from "./firebase-config.js?v=7";
 
 const $ = id => document.getElementById(id);
 const app = initializeApp(firebaseConfig);
@@ -112,6 +112,8 @@ onAuthStateChanged(auth, async u => {
     } catch { /* pas de document : admin */ }
   }
   $("adminBar").hidden = !loggedIn;
+  $("who").hidden = !loggedIn; $("adminLink").hidden = loggedIn;
+  $("whoMail").textContent = u ? u.email : "";
   const allowed = Object.entries(PEOPLE).filter(([k]) => myLists === null || myLists.includes(k));
   $("gOwner").replaceChildren(...allowed.map(([k, n]) => el("option", { value: k, textContent: n })));
   if (myLists?.length && !myLists.includes(current)) { current = myLists[0]; location.hash = current; }
