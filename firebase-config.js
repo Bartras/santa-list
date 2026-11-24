@@ -1,8 +1,9 @@
-// Colle ici la config de ton app web Firebase (Paramètres du projet > Tes applications > Config).
-// Ces valeurs sont publiques par nature : la sécurité vient des règles Firestore (firestore.rules).
+// Config publique de l'app web Firebase : la sécurité repose sur les règles Firestore (firestore.rules).
 export const firebaseConfig = {
-  apiKey: "REMPLACE_MOI",
-  authDomain: "REMPLACE_MOI.firebaseapp.com",
-  projectId: "REMPLACE_MOI",
-  appId: "REMPLACE_MOI"
+  apiKey: "AIzaSyDw8poQQXzapshvOqyuPVTsYOXytdUwYeE",
+  authDomain: "santa-list-ef741.firebaseapp.com",
+  projectId: "santa-list-ef741",
+  storageBucket: "santa-list-ef741.firebasestorage.app",
+  messagingSenderId: "198279495135",
+  appId: "1:198279495135:web:554256cb431434739e986a"
 };
