@@ -1,0 +1,25 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Remplace par l'email du compte admin créé dans Firebase Authentication
+    function isAdmin() {
+      return request.auth != null
+        && request.auth.token.email == 'TON_EMAIL@exemple.fr'
+        && request.auth.token.email_verified == true;
+    }
+
+    match /gifts/{id} {
+      allow read: if true;
+      allow create, delete: if isAdmin();
+      allow update: if isAdmin()
+        // Un visiteur ne peut modifier QUE takenBy / takenAt,
+        // et seulement pour réserver un cadeau libre ou libérer un cadeau pris.
+        || (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['takenBy', 'takenAt'])
+            && (resource.data.takenBy == null || request.resource.data.takenBy == null)
+            && (request.resource.data.takenBy == null
+                || (request.resource.data.takenBy is string
+                    && request.resource.data.takenBy.size() > 0
+                    && request.resource.data.takenBy.size() <= 60)));
+    }
+  }
+}

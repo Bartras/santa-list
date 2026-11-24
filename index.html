@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ma liste de Noël</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>
+  <h1>🎄 Listes de Noël</h1>
+  <p class="sub">Une idée de cadeau ? Clique sur « Je l'offre » pour que personne d'autre ne l'achète.</p>
+  <nav id="tabs" class="tabs"></nav>
+</header>
+
+<main>
+  <div id="adminBar" hidden>
+    <button id="addBtn" class="btn primary">+ Ajouter un cadeau</button>
+    <button id="logoutBtn" class="btn">Se déconnecter</button>
+  </div>
+  <div id="status" class="status">Chargement…</div>
+  <div id="grid" class="grid"></div>
+</main>
+
+<footer><a href="#" id="adminLink">Admin</a></footer>
+
+<!-- Prise d'un cadeau -->
+<dialog id="takeDlg">
+  <form method="dialog" id="takeForm">
+    <h2>Je l'offre 🎁</h2>
+    <p id="takeTitle" class="muted"></p>
+    <label>Ton nom <input id="takeName" required maxlength="60" autocomplete="name"></label>
+    <div class="row"><button type="button" class="btn" data-close>Annuler</button><button class="btn primary">Confirmer</button></div>
+  </form>
+</dialog>
+
+<!-- Connexion admin -->
+<dialog id="loginDlg">
+  <form method="dialog" id="loginForm">
+    <h2>Connexion admin</h2>
+    <label>Email <input id="loginEmail" type="email" required autocomplete="username"></label>
+    <label>Mot de passe <input id="loginPwd" type="password" required autocomplete="current-password"></label>
+    <p id="loginErr" class="err"></p>
+    <div class="row"><button type="button" class="btn" data-close>Annuler</button><button class="btn primary">Connexion</button></div>
+  </form>
+</dialog>
+
+<!-- Ajout / édition -->
+<dialog id="giftDlg">
+  <form method="dialog" id="giftForm">
+    <h2 id="giftDlgTitle">Ajouter un cadeau</h2>
+    <label>Pour qui ? <select id="gOwner"></select></label>
+    <label>Lien du produit
+      <span class="inline"><input id="gUrl" type="url" placeholder="https://…" required><button type="button" class="btn" id="fetchBtn">Récupérer</button></span>
+    </label>
+    <p id="fetchMsg" class="muted"></p>
+    <label>Titre <input id="gTitle" required maxlength="140"></label>
+    <label>Prix (optionnel) <input id="gPrice" maxlength="30" placeholder="ex. 49,90 €"></label>
+    <label>Note (taille, couleur…) <input id="gNote" maxlength="200"></label>
+    <label>Photo — URL <input id="gImage" type="url" placeholder="https://…"></label>
+    <label>ou photo depuis ton appareil <input id="gFile" type="file" accept="image/*"></label>
+    <img id="gPreview" class="preview" alt="" hidden>
+    <div class="row"><button type="button" class="btn" data-close>Annuler</button><button class="btn primary" id="saveBtn">Enregistrer</button></div>
+  </form>
+</dialog>
+
+<script type="module" src="app.js"></script>
+</body>
+</html>
