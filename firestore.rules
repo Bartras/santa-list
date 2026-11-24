@@ -13,7 +13,10 @@ service cloud.firestore {
         ? get(/databases/$(database)/documents/editors/$(request.auth.token.email)).data.list
         : '';
     }
-    function isEditorOf(list) { return editorList() == list && list != ''; }
+    // editors/{email}.list : une ou plusieurs listes séparées par une virgule, sans espace (ex. "murielle,philippe")
+    function isEditorOf(list) {
+      return list != '' && editorList().matches('(.*,)?' + list + '(,.*)?');
+    }
 
     match /editors/{email} {
       allow read: if request.auth != null && (request.auth.token.email == email || isAdmin());

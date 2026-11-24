@@ -2,7 +2,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/fireba
 import { getFirestore, collection, doc, getDoc, addDoc, updateDoc, deleteDoc, onSnapshot, query, orderBy,
          runTransaction, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { firebaseConfig } from "./firebase-config.js?v=4";
+import { firebaseConfig } from "./firebase-config.js?v=5";
 
 const $ = id => document.getElementById(id);
 const app = initializeApp(firebaseConfig);
@@ -12,13 +12,13 @@ const gifts = collection(db, "gifts");
 
 const PEOPLE = { thibaut: "Thibaut", sara: "Sara", sohan: "Sohan", murielle: "Murielle", philippe: "Philippe" };
 let current = PEOPLE[location.hash.slice(1)] ? location.hash.slice(1) : "thibaut";
-let loggedIn = false, myList = null /* null = admin (toutes les listes) */, items = [], editingId = null, pendingImageData = null;
+let loggedIn = false, myLists = null /* null = admin (toutes les listes) */, items = [], editingId = null, pendingImageData = null;
 
 const safeUrl = u => { try { const x = new URL(u); return /^https?:$/.test(x.protocol) ? x.href : ""; } catch { return ""; } };
 const el = (tag, props = {}, ...kids) => { const e = Object.assign(document.createElement(tag), props); kids.forEach(k => e.append(k)); return e; };
 
 // ---------- Rendu ----------
-const canEdit = g => loggedIn && (myList === null || ownerOf(g) === myList);
+const canEdit = g => loggedIn && (myLists === null || myLists.includes(ownerOf(g)));
 const ownerOf = g => PEOPLE[g.owner] ? g.owner : "thibaut"; // anciens cadeaux sans champ owner
 function renderTabs() {
   $("tabs").replaceChildren(...Object.entries(PEOPLE).map(([k, n]) => {
@@ -102,17 +102,17 @@ $("logoutBtn").onclick = () => signOut(auth);
 // Rôle : un document editors/{email} { list: "murielle" } limite le compte à sa propre liste.
 // Sans document, le compte est traité comme admin dans l'interface (les règles Firestore font foi).
 onAuthStateChanged(auth, async u => {
-  loggedIn = !!u; myList = null;
+  loggedIn = !!u; myLists = null;
   if (u) {
     try {
       const s = await getDoc(doc(db, "editors", u.email));
-      if (s.exists() && PEOPLE[s.data().list]) myList = s.data().list;
+      if (s.exists()) myLists = String(s.data().list).split(",").map(x => x.trim()).filter(x => PEOPLE[x]); // ex. "murielle,philippe"
     } catch { /* pas de document : admin */ }
   }
   $("adminBar").hidden = !loggedIn;
-  const allowed = Object.entries(PEOPLE).filter(([k]) => myList === null || k === myList);
+  const allowed = Object.entries(PEOPLE).filter(([k]) => myLists === null || myLists.includes(k));
   $("gOwner").replaceChildren(...allowed.map(([k, n]) => el("option", { value: k, textContent: n })));
-  if (myList) current = myList;
+  if (myLists?.length && !myLists.includes(current)) { current = myLists[0]; location.hash = current; }
   render();
 });
 
@@ -121,7 +121,7 @@ $("addBtn").onclick = () => openGift(null);
 function openGift(g) {
   editingId = g?.id || null; pendingImageData = null;
   $("giftDlgTitle").textContent = g ? "Modifier le cadeau" : "Ajouter un cadeau";
-  $("gOwner").value = g ? ownerOf(g) : (myList || current);
+  $("gOwner").value = g ? ownerOf(g) : (myLists === null || myLists.includes(current) ? current : myLists[0]);
   $("gUrl").value = g?.url || ""; $("gTitle").value = g?.title || ""; $("gPrice").value = g?.price || "";
   $("gNote").value = g?.note || ""; $("gImage").value = g && !g.imageIsData ? (g.image || "") : "";
   $("gFile").value = ""; $("fetchMsg").textContent = "";

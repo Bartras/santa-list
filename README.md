@@ -18,5 +18,5 @@ Site statique (GitHub Pages) + Firebase Firestore pour le partage temps réel de
 
 ## Comptes « éditeurs » (Murielle, Philippe…)
 1. *Authentication > Utilisateurs > Ajouter un utilisateur* : email + mot de passe provisoire.
-2. *Firestore > Données > Démarrer une collection* `editors` → ID du document = **son email en minuscules** → champ `list` (string) = `murielle` (ou `philippe`, `sara`, `sohan`, `thibaut`).
+2. *Firestore > Données > Démarrer une collection* `editors` → ID du document = **son email en minuscules** → champ `list` (string) = `murielle`. Plusieurs listes : séparées par une virgule, sans espace (`murielle,philippe`).
 3. Republier `firestore.rules`. L'éditeur se connecte via « Connexion » en bas de page et ne gère que sa liste.
