@@ -37,3 +37,4 @@ input{display:block;width:100%;margin-top:4px;padding:9px;border:1px solid var(-
 .tab{border:1px solid var(--line);background:var(--card);color:var(--txt);padding:8px 18px;border-radius:99px;cursor:pointer;font:inherit}
 .tab.active{background:var(--red);border-color:var(--red);color:#fff}
 select{display:block;width:100%;margin-top:4px;padding:9px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--txt);font:inherit}
+[hidden]{display:none!important}
