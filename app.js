@@ -159,3 +159,18 @@ async function remove(g) {
 }
 
 document.querySelectorAll("[data-close]").forEach(b => b.onclick = () => b.closest("dialog").close());
+
+// Flocons de neige en fond (décoratif, désactivé si l'utilisateur réduit les animations)
+(() => {
+  if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const box = $("snow"), chars = ["❄", "❅", "❆", "✦"];
+  for (let i = 0; i < 28; i++) {
+    const f = el("span", { className: "flake", textContent: chars[i % chars.length] });
+    f.style.left = Math.random() * 100 + "%";
+    f.style.fontSize = 10 + Math.random() * 16 + "px";
+    f.style.animationDuration = 9 + Math.random() * 12 + "s";
+    f.style.animationDelay = -Math.random() * 20 + "s";
+    f.style.setProperty("--dx", (Math.random() * 120 - 60) + "px");
+    box.append(f);
+  }
+})();
